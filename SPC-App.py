@@ -100,7 +100,7 @@ def main():
     print(RiskAreaName(ShapeFileComparison()))
 
     for i in os.listdir():
-        if not i == "SPC-App.py":
+        if not i == "SPC-App.py" and not os.path.isdir(i):
             os.remove(i)
 
 if __name__ == "__main__":
