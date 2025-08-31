@@ -31,10 +31,10 @@ def GetZipFromHTML(SourceSite, FindInHTML, URL_begin, param1,param2,param3,desir
 
     html = BeautifulSoup(rawtext,"html.parser")
 
-    line_found = html.find_all(href=re.compile(FindInHTML)) #shp.zip in our case
+    line_found = html.find_all(href=re.compile(FindInHTML))
     line_string = str(line_found[0])
 
-    EndOfUrl = StartToEnd(line_string,param1,param2,param3) #/,zip,3
+    EndOfUrl = StartToEnd(line_string,param1,param2,param3) 
     source_zip_file = requests.get(URL_begin + EndOfUrl)
 
     with open(desired_filename, mode="wb") as file:
@@ -65,7 +65,7 @@ def ShapeFileComparison():
     GetZipFromHTML("https://www.spc.noaa.gov/products/outlook/day1otlk.html", "shp.zip","https://www.spc.noaa.gov","/","zip",3,zip_file_name)
     name_of_file = ZipFileIteration(zip_file_name)
 
-    shape_file = geopandas.read_file(name_of_file[0]) #it works! it reads the different shapes and their points! I win!
+    shape_file = geopandas.read_file(name_of_file[0]) 
     
     shape_dict = shape_file.to_geo_dict()
 
@@ -100,7 +100,7 @@ def main():
     print(RiskAreaName(ShapeFileComparison()))
 
     for i in os.listdir():
-        if not i == "SPC-App.py" and not os.path.isdir(i):
+        if not i == "SPC-App.py" and not i == "README.md" and not os.path.isdir(i):
             os.remove(i)
 
 if __name__ == "__main__":
