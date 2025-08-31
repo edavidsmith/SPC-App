@@ -31,7 +31,7 @@ def GetZipFromHTML(SourceSite, FindInHTML, URL_begin, param1,param2,param3,desir
 
     html = BeautifulSoup(rawtext,"html.parser")
 
-    line_found = html.find_all(href=re.compile(FindInHTML))
+    line_found = html.find_all(href=re.compile(FindInHTML)) #shp.zip in our case
     line_string = str(line_found[0])
 
     EndOfUrl = StartToEnd(line_string,param1,param2,param3) 
@@ -99,8 +99,10 @@ def RiskAreaName(risk_area_number):
 def main():
     print(RiskAreaName(ShapeFileComparison()))
 
+    protected_files = ["SPC-App.py", "README.md", ".gitignore"]
+
     for i in os.listdir():
-        if not i == "SPC-App.py" and not i == "README.md" and not os.path.isdir(i):
+        if i not in protected_files and not os.path.isdir(i):
             os.remove(i)
 
 if __name__ == "__main__":
