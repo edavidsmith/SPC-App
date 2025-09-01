@@ -48,11 +48,11 @@ def ZipFileIteration(filename):
         for i in file_list:
             if "cat.shp" in i:
                 name_of_catfile = i
-            if "sighail.shp" in i:
+            if "hail.shp" in i:
                 name_of_hailfile = i
-            if "sigtorn.shp" in i:
+            if "torn.shp" in i:
                 name_of_tornfile = i
-            if "sigwind.shp" in i:
+            if "wind.shp" in i:
                 name_of_windfile = i
             myzip.extract(i)
 
@@ -75,11 +75,19 @@ def ShapeFileComparison():
     gdf = gpd.GeoDataFrame.from_features(shape_dict["features"])
     coord_to_use = geopandas.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
     gdf.set_crs("EPSG:3857", inplace=True)
+    print("Does it get this far at least?") #it does get this far
 
-    for num,i in enumerate(gdf.contains(coord_to_use[0])):
+    risk_exists = False
+    for num,i in enumerate(gdf.contains(coord_to_use[0])): #when the city is not in a risk area, there will be an error inevitably 
+        print(i)
         if i == True:
             num_caught = num
+            risk_exists = True
 
+    if(not risk_exists):
+        num_caught = 9 #basic way of handling when there are no storm risks, may refine later
+
+    print(num_caught)
     return num_caught
 
 def RiskAreaName(risk_area_number):
@@ -96,7 +104,7 @@ def RiskAreaName(risk_area_number):
             return "Moderate risk"
         case 5:
             return "High risk"
-        case _:
+        case 9:
             return "No storm risks"
 
 def main():
