@@ -46,18 +46,18 @@ def ZipFileIteration(filename):
         file_list = myzip.namelist()
 
         for i in file_list:
-            if "cat" in i and ".shp" in i:
-                myzip.extract(i)
-                name_of_shpfile = i
-            if "cat" in i and ".shx" in i:
-                myzip.extract(i)
-                name_of_shxfile = i
-            if "cat" in i and ".info" in i:
-                myzip.extract(i)
-                name_of_infofile = i
+            if "cat.shp" in i:
+                name_of_catfile = i
+            if "sighail.shp" in i:
+                name_of_hailfile = i
+            if "sigtorn.shp" in i:
+                name_of_tornfile = i
+            if "sigwind.shp" in i:
+                name_of_windfile = i
+            myzip.extract(i)
 
 
-        return [name_of_shpfile,name_of_shxfile,name_of_infofile]
+        return {"cat": name_of_catfile,"hail": name_of_hailfile,"tor": name_of_tornfile, "wind": name_of_windfile} #returns the shape file for each respective outlook in a dictionary
 
 def ShapeFileComparison():
     city = CityToCoord(input("Enter a city: "))
@@ -65,9 +65,12 @@ def ShapeFileComparison():
     GetZipFromHTML("https://www.spc.noaa.gov/products/outlook/day1otlk.html", "shp.zip","https://www.spc.noaa.gov","/","zip",3,zip_file_name)
     name_of_file = ZipFileIteration(zip_file_name)
 
-    shape_file = geopandas.read_file(name_of_file[0]) 
+    user_query_which_outlook = input("Which outlook do you wish to view? (cat,tor,hail,wind): ")
+    shape_file = geopandas.read_file(name_of_file.get(user_query_which_outlook)) 
     
     shape_dict = shape_file.to_geo_dict()
+    print(shape_dict)
+
 
     gdf = gpd.GeoDataFrame.from_features(shape_dict["features"])
     coord_to_use = geopandas.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
