@@ -41,32 +41,39 @@ def GetZipFromHTML(SourceSite, FindInHTML, URL_begin, param1,param2,param3,desir
         file.write(source_zip_file.content)
     
 
-def ZipFileIteration(filename):
+def ZipFileIteration(filename, user_specified_outlook):
     with ZipFile(filename,'r') as myzip:
         file_list = myzip.namelist()
 
+        #only necessary files are extracted based on desired outlook
         for i in file_list:
-            if "cat.shp" in i:
-                name_of_catfile = i
-            if not "sig" in i and "hail.shp" in i:
-                name_of_hailfile = i
-            if "torn.shp" in i:
-                name_of_tornfile = i
-            if "wind.shp" in i:
-                name_of_windfile = i
-            myzip.extract(i)
+            if user_specified_outlook == "cat" and "cat" in i:
+                if "shp" in i:
+                    name_of_desired = i
+                myzip.extract(i)
+            if user_specified_outlook == "hail" and not "sig" in i and "hail" in i:
+                if "shp" in i:
+                    name_of_desired = i
+                myzip.extract(i)
+            if user_specified_outlook == "tor" and not "sig" in i and "torn" in i:
+                if "shp" in i:
+                    name_of_desired = i
+                myzip.extract(i)
+            if user_specified_outlook == "wind" and not "sig" in i and "wind" in i:
+                if "shp" in i:
+                    name_of_desired = i
+                myzip.extract(i)
 
-
-        return {"cat": name_of_catfile,"hail": name_of_hailfile,"tor": name_of_tornfile, "wind": name_of_windfile} #returns the shape file for each respective outlook in a dictionary
+        return name_of_desired
 
 def ShapeFileComparison(user_query_which_outlook):
     city = CityToCoord(input("Enter a city: "))
     zip_file_name = "spcdata.zip"
     GetZipFromHTML("https://www.spc.noaa.gov/products/outlook/day1otlk.html", "shp.zip","https://www.spc.noaa.gov","/","zip",3,zip_file_name)
-    name_of_file = ZipFileIteration(zip_file_name)
+    name_of_file = ZipFileIteration(zip_file_name,user_query_which_outlook)
 
     # user_query_which_outlook = input("Which outlook do you wish to view? (cat,tor,hail,wind): ")
-    shape_file = geopandas.read_file(name_of_file.get(user_query_which_outlook)) 
+    shape_file = geopandas.read_file(name_of_file) 
     
     shape_dict = shape_file.to_geo_dict()
 
@@ -76,7 +83,7 @@ def ShapeFileComparison(user_query_which_outlook):
     
 
     risk_exists = False
-    for num,i in enumerate(gdf.contains(coord_to_use[0])): #when the city is not in a risk area, there will be an error inevitably 
+    for num,i in enumerate(gdf.contains(coord_to_use[0])):
         print(i)
         if i == True:
             num_caught = num
@@ -99,16 +106,55 @@ def RiskAreaName(risk_area_number,user_specified_risk):
                 return "5% wind risk"
             elif user_specified_risk == "hail":
                 return "5% hail risk"
+            elif user_specified_risk == "tor":
+                return "2% tornado risk"
         case 1:
-            return "Marginal risk"
+            if user_specified_risk == "cat":
+                return "Marginal risk"
+            elif user_specified_risk == "wind":
+                return "15% wind risk"
+            elif user_specified_risk == "hail":
+                return "15% hail risk"
+            elif user_specified_risk == "tor":
+                return "5% tornado risk"
         case 2:
-            return "Slight risk"
+            if user_specified_risk == "cat":
+                return "Slight risk"
+            elif user_specified_risk == "wind":
+                return "30% wind risk"
+            elif user_specified_risk == "hail":
+                return "30% hail risk"
+            elif user_specified_risk == "tor":
+                return "15% tornado risk"
         case 3:
-            return "Enhanced risk"
+            if user_specified_risk == "cat":
+                return "Enhanced risk"
+            elif user_specified_risk == "wind":
+                return "45% wind risk"
+            elif user_specified_risk == "hail":
+                return "45% hail risk"
+            elif user_specified_risk == "tor":
+                return "30% tornado risk"
         case 4:
-            return "Moderate risk"
+            if user_specified_risk == "cat":
+                return "Moderate risk"
+            elif user_specified_risk == "wind":
+                return "60% wind risk"
+            elif user_specified_risk == "hail":
+                return "60% hail risk"
+            elif user_specified_risk == "tor":
+                return "45% tornado risk"
         case 5:
-            return "High risk"
+            if user_specified_risk == "cat":
+                return "High risk"
+            elif user_specified_risk == "wind":
+                return "Significant wind risk (highest possible wind risk)"
+            elif user_specified_risk == "hail":
+                return "Significant hail risk (highest possible wind risk)"
+            elif user_specified_risk == "tor":
+                return "60% tornado risk"
+        case 6:
+            return "Significant tornado risk (highest possible tornado risk)" #the only case where integers 6 could be returned are for tornado risks
         case 9:
             return "No storm risks"
 
