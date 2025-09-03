@@ -72,19 +72,17 @@ def ShapeFileComparison(user_query_which_outlook):
     GetZipFromHTML("https://www.spc.noaa.gov/products/outlook/day1otlk.html", "shp.zip","https://www.spc.noaa.gov","/","zip",3,zip_file_name)
     name_of_file = ZipFileIteration(zip_file_name,user_query_which_outlook)
 
-    # user_query_which_outlook = input("Which outlook do you wish to view? (cat,tor,hail,wind): ")
-    shape_file = geopandas.read_file(name_of_file) 
+    shape_file = gpd.read_file(name_of_file) 
     
     shape_dict = shape_file.to_geo_dict()
 
     gdf = gpd.GeoDataFrame.from_features(shape_dict["features"])
-    coord_to_use = geopandas.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
+    coord_to_use = gpd.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
     gdf.set_crs("EPSG:3857", inplace=True)
     
 
     risk_exists = False
     for num,i in enumerate(gdf.contains(coord_to_use[0])):
-        print(i)
         if i == True:
             num_caught = num
             risk_exists = True
@@ -92,7 +90,6 @@ def ShapeFileComparison(user_query_which_outlook):
     if not risk_exists:
         num_caught = 9 #basic way of handling situations where there are no storm risks, may refine later
 
-    print(num_caught)
     return num_caught
     
 #for wind risks 0 means 5% risk. After, it goes from 15%, in increments of 15 up to 60%. Use accordingly
