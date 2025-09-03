@@ -69,13 +69,11 @@ def ShapeFileComparison(user_query_which_outlook):
     shape_file = geopandas.read_file(name_of_file.get(user_query_which_outlook)) 
     
     shape_dict = shape_file.to_geo_dict()
-    print(shape_dict)
-
 
     gdf = gpd.GeoDataFrame.from_features(shape_dict["features"])
     coord_to_use = geopandas.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
     gdf.set_crs("EPSG:3857", inplace=True)
-    print("Does it get this far at least?") #it does get this far
+    
 
     risk_exists = False
     for num,i in enumerate(gdf.contains(coord_to_use[0])): #when the city is not in a risk area, there will be an error inevitably 
@@ -99,6 +97,8 @@ def RiskAreaName(risk_area_number,user_specified_risk):
                 return "General thunderstorm risk"
             elif user_specified_risk == "wind":
                 return "5% wind risk"
+            elif user_specified_risk == "hail":
+                return "5% hail risk"
         case 1:
             return "Marginal risk"
         case 2:
