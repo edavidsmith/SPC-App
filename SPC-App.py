@@ -77,7 +77,7 @@ def ShapeFileComparison(user_query_which_outlook):
 
     gdf = gpd.GeoDataFrame.from_features(shape_dict["features"])
 
-    coord_to_use = geopandas.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
+    coord_to_use = gpd.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
     gdf.set_crs("EPSG:3857", inplace=True)
 
     risk_exists = False
