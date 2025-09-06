@@ -76,86 +76,26 @@ def ShapeFileComparison(user_query_which_outlook):
     shape_dict = shape_file.to_geo_dict()
 
     gdf = gpd.GeoDataFrame.from_features(shape_dict["features"])
-    coord_to_use = gpd.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
+
+    coord_to_use = geopandas.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
     gdf.set_crs("EPSG:3857", inplace=True)
 
     risk_exists = False
     for num,i in enumerate(gdf.contains(coord_to_use[0])):
+        # print(i)
         if i == True:
             num_caught = num
             risk_exists = True
 
     if not risk_exists:
-        num_caught = 9 #basic way of handling situations where there are no storm risks, may refine later
-
-    return num_caught
-    
-#for wind risks 0 means 5% risk. After, it goes from 15%, in increments of 15 up to 60%. Use accordingly
-#same as above for hail risk
-def RiskAreaName(risk_area_number,user_specified_risk):
-    match risk_area_number:
-        case 0:
-            if user_specified_risk == "cat":
-                return "General thunderstorm risk"
-            elif user_specified_risk == "wind":
-                return "5% wind risk"
-            elif user_specified_risk == "hail":
-                return "5% hail risk"
-            elif user_specified_risk == "tor":
-                return "2% tornado risk"
-        case 1:
-            if user_specified_risk == "cat":
-                return "Marginal risk"
-            elif user_specified_risk == "wind":
-                return "15% wind risk"
-            elif user_specified_risk == "hail":
-                return "15% hail risk"
-            elif user_specified_risk == "tor":
-                return "5% tornado risk"
-        case 2:
-            if user_specified_risk == "cat":
-                return "Slight risk"
-            elif user_specified_risk == "wind":
-                return "30% wind risk"
-            elif user_specified_risk == "hail":
-                return "30% hail risk"
-            elif user_specified_risk == "tor":
-                return "15% tornado risk"
-        case 3:
-            if user_specified_risk == "cat":
-                return "Enhanced risk"
-            elif user_specified_risk == "wind":
-                return "45% wind risk"
-            elif user_specified_risk == "hail":
-                return "45% hail risk"
-            elif user_specified_risk == "tor":
-                return "30% tornado risk"
-        case 4:
-            if user_specified_risk == "cat":
-                return "Moderate risk"
-            elif user_specified_risk == "wind":
-                return "60% wind risk"
-            elif user_specified_risk == "hail":
-                return "60% hail risk"
-            elif user_specified_risk == "tor":
-                return "45% tornado risk"
-        case 5:
-            if user_specified_risk == "cat":
-                return "High risk"
-            elif user_specified_risk == "wind":
-                return "Significant wind risk (highest possible wind risk)"
-            elif user_specified_risk == "hail":
-                return "Significant hail risk (highest possible wind risk)"
-            elif user_specified_risk == "tor":
-                return "60% tornado risk"
-        case 6:
-            return "Significant tornado risk (highest possible tornado risk)" #the only case where integers 6 could be returned are for tornado risks
-        case 9:
-            return "No storm risks"
+        return "No storm risks today" 
+    else:
+        risk_name = gdf.loc[num_caught,"LABEL2"] #based on the number label that evaluated "True" for .contains(), its corresponding risk label is accessed thus
+        return risk_name #this returns a string
 
 def main():
     user_query_which_outlook = input("Which outlook do you wish to view? (cat,tor,hail,wind): ")
-    print(RiskAreaName(ShapeFileComparison(user_query_which_outlook),user_query_which_outlook))
+    print(ShapeFileComparison(user_query_which_outlook))
 
     protected_files = ["SPC-App.py", "README.md", ".gitignore"]
 
