@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from zipfile import ZipFile
-import geopandas
 from shapely.geometry import Point
 import geopandas as gpd
 import os
@@ -79,7 +78,6 @@ def ShapeFileComparison(user_query_which_outlook):
     gdf = gpd.GeoDataFrame.from_features(shape_dict["features"])
     coord_to_use = gpd.GeoSeries([Point(city["longitude"],city["latitude"])], crs="EPSG:3857")
     gdf.set_crs("EPSG:3857", inplace=True)
-    
 
     risk_exists = False
     for num,i in enumerate(gdf.contains(coord_to_use[0])):
