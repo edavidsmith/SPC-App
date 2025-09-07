@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from datetime import timezone
 
-def CityToCoord(city):
+def CityToCoordinates(city):
     #STEP 1: a city is converted to coordinates in this function
     url = "https://nominatim.openstreetmap.org/search?"
     params = "addressdetails=1&q=" + city.replace(" ","+") + "&format=jsonv2"
@@ -21,17 +21,16 @@ def CityToCoord(city):
 
 def DownloadZipFile(desired_zipfilename):
     #STEP 2: a zip file for download is located, utilizing knowledge of the SPC's predictable URL naming conventions
-    day1_zulu = (600,1300,1630,2000,100)
+    day1_zulu = (100,600,1300,1630,2000)
     time = datetime.now(timezone.utc)
     time_replace = time.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
     formatted_zulu_time = time_replace[11:16].replace(":",'') #the time in zulu
     today_date = datetime.today().strftime('%Y-%m-%d').replace("-","") #today's date as YYYYMMDD
-
+    
     #grabs what the most current outlook time SHOULD be
     for i in day1_zulu:
-        if not int(formatted_zulu_time) >= i:
-            break
-        current_day1_outlook_time = i
+        if int(formatted_zulu_time) >= i:
+            current_day1_outlook_time = i
 
     full_url = f"https://www.spc.noaa.gov/products/outlook/archive/{today_date[:4]}/day1otlk_{today_date}_{current_day1_outlook_time:04d}-shp.zip"
     source_zip_file = requests.get(full_url)
@@ -74,7 +73,7 @@ def ZipFileIteration(zipfilename, user_specified_outlook):
 
 def ShapeFileParsed():
     #STEP 4: the .shp file extracted from earlier is parsed and used to tell the user what risk area their specified city is in
-    city = CityToCoord(input("Enter a city: "))
+    city = CityToCoordinates(input("Enter a city: "))
     user_query_which_outlook = input("Which type of outlook do you wish to view? (categorical,tornado,hail,wind): ").lower().strip()
     
     #loop handles bad input
@@ -103,7 +102,7 @@ def ShapeFileParsed():
         print("No storm risks today")
     else:
         risk_name = gdf.loc[num_caught,"LABEL2"] #based on the Integer label that evaluated "True" for .contains(), its corresponding String risk label is accessed thus
-        print(f"For today's {user_query_which_outlook} convective outlook in {city["city-name"]}, there is a {risk_name} in place") #this returns a string
+        print(f"For today's {user_query_which_outlook} convective outlook in {city["city-name"]}, there is a {risk_name} in place")
 
 def main():
     ShapeFileParsed()
