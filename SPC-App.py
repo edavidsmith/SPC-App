@@ -1,18 +1,13 @@
 import requests
-from bs4 import BeautifulSoup
-import re
 from zipfile import ZipFile
 from shapely.geometry import Point
 import geopandas as gpd
 import os
-
-def StartToEnd(string,startchar,endchar,amounttoadd = 0):
-    start = string.find(startchar)
-    end = string.find(endchar) + amounttoadd
-
-    return string[start:end]
+from datetime import datetime
+from datetime import timezone
 
 def CityToCoord(city):
+    #STEP 1: a city is converted to coordinates in this function
     url = "https://nominatim.openstreetmap.org/search?"
     params = "addressdetails=1&q=" + city.replace(" ","+") + "&format=jsonv2"
     full_url = url + params
@@ -24,24 +19,35 @@ def CityToCoord(city):
 
     return {"latitude": lat, "longitude": lon}
 
-def GetZipFromHTML(SourceSite, FindInHTML, URL_begin, param1,param2,param3,desired_filename):
-    sourceHTML = requests.get(SourceSite)
-    rawtext = sourceHTML.text
+def DownloadZipFile(desired_zipfilename):
+    #STEP 2: a zip file's url is located, utilizing knowledge of the SPC's predictable naming conventions
+    day1_zulu = (600,1300,1630,2000,100)
+    time = datetime.now(timezone.utc)
+    time_replace = time.isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+    formatted_zulu_time = time_replace[11:16].replace(":",'') #the time in zulu
+    today_date = datetime.today().strftime('%Y-%m-%d').replace("-","") #today's date as YYYYMMDD
 
-    html = BeautifulSoup(rawtext,"html.parser")
+    #grabs what the most current outlook time SHOULD be
+    for i in day1_zulu:
+        if not int(formatted_zulu_time) >= i:
+            break
+        current_day1_outlook_time = i
 
-    line_found = html.find_all(href=re.compile(FindInHTML)) #shp.zip in our case
-    line_string = str(line_found[0])
+    full_url = f"https://www.spc.noaa.gov/products/outlook/archive/{today_date[:4]}/day1otlk_{today_date}_{current_day1_outlook_time:04d}-shp.zip"
+    source_zip_file = requests.get(full_url)
 
-    EndOfUrl = StartToEnd(line_string,param1,param2,param3) 
-    source_zip_file = requests.get(URL_begin + EndOfUrl)
+    #uses previous zulu time's outlook if the SPC has not updated the page yet
+    if source_zip_file.status_code != 200:
+        fixed_outlook_index = day1_zulu.index(current_day1_outlook_time) - 1
+        full_url = f"https://www.spc.noaa.gov/products/outlook/archive/{today_date[:4]}/day1otlk_{today_date}_{day1_zulu[fixed_outlook_index]:04d}-shp.zip"
+        source_zip_file = requests.get(full_url)
 
-    with open(desired_filename, mode="wb") as file:
+    with open(desired_zipfilename, mode="wb") as file:
         file.write(source_zip_file.content)
     
 
-def ZipFileIteration(filename, user_specified_outlook):
-    with ZipFile(filename,'r') as myzip:
+def ZipFileIteration(zipfilename, user_specified_outlook):
+    with ZipFile(zipfilename,'r') as myzip:
         file_list = myzip.namelist()
 
         #only necessary files are extracted based on desired outlook
@@ -65,10 +71,11 @@ def ZipFileIteration(filename, user_specified_outlook):
 
         return name_of_desired
 
-def ShapeFileComparison(user_query_which_outlook):
+def ShapeFileComparison():
     city = CityToCoord(input("Enter a city: "))
+    user_query_which_outlook = input("Which outlook do you wish to view? (cat,tor,hail,wind): ")
     zip_file_name = "spcdata.zip"
-    GetZipFromHTML("https://www.spc.noaa.gov/products/outlook/day1otlk.html", "shp.zip","https://www.spc.noaa.gov","/","zip",3,zip_file_name)
+    DownloadZipFile(zip_file_name)
     name_of_file = ZipFileIteration(zip_file_name,user_query_which_outlook)
 
     shape_file = gpd.read_file(name_of_file) 
@@ -82,7 +89,6 @@ def ShapeFileComparison(user_query_which_outlook):
 
     risk_exists = False
     for num,i in enumerate(gdf.contains(coord_to_use[0])):
-        # print(i)
         if i == True:
             num_caught = num
             risk_exists = True
@@ -94,8 +100,7 @@ def ShapeFileComparison(user_query_which_outlook):
         return risk_name #this returns a string
 
 def main():
-    user_query_which_outlook = input("Which outlook do you wish to view? (cat,tor,hail,wind): ")
-    print(ShapeFileComparison(user_query_which_outlook))
+    print(ShapeFileComparison())
 
     protected_files = ["SPC-App.py", "README.md", ".gitignore"]
 
