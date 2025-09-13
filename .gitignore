@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 __pycache__/
 *.py[cod]
 *$py.class
@@ -18,3 +19,25 @@ Thumbs.db
 *.qix
 
 *.log
+=======
+__pycache__/
+*.py[cod]
+*$py.class
+
+venv/
+env/
+
+.vscode/
+
+.DS_Store
+Thumbs.db
+
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.qix
+
+*.log
+>>>>>>> 99fb45219e699b89be10c7bb2c8147238e2acef8
