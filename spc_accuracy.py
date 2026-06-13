@@ -43,7 +43,7 @@ def download_archived_forecast(date):
         print("Archive downloaded")
         return needed_dir, True
     else:
-        print("Files already exist")
+        print("Necessary files already in directory")
         return f"{needed_dir}\\{needed_file}", False
 
 def zip_file_extraction(zip_loc):
@@ -62,23 +62,25 @@ def tor_coords_from_date(date):
     con = sqlite3.connect("tornado-data\\tornado-events.db")
     cur = con.cursor()
     tracks = []
-    for row in cur.execute(f'SELECT slat, slon, elat, elon FROM tornadoes WHERE date = "{date}"'):
+    labels = []
+    for row in cur.execute(f'SELECT slat, slon, elat, elon, mag FROM tornadoes WHERE date = "{date}"'):
         tracks.append([[row[0], row[1]], [row[2], row[3]]])
-
-    return tracks
+        labels.append(row[4])
+    return tracks, labels
 
 def plot_tor_tracks(folium_object, tracks):
     #due to the nature of PolyLine, must plot every 2 pairs of coords, or else every single line will connect to one another
-    con = sqlite3.connect("tornado-data\\tornado-events.db")
-    cur = con.cursor()
-
-    for track in tracks:
+    tracks_list = tracks[0]
+    labels = tracks[1]
+    inc = 0
+    for track in tracks_list:
         folium.PolyLine(
             locations=track,
             color="#FF0000",
             weight=3,
-            tooltip="",
+            tooltip="EF" + str(labels[inc]),
         ).add_to(folium_object)
+        inc+=1
 
 def plot_risk_polygon(folium_object, coord_list, risk_percent):
     color_dict = {"General Thunderstorm Risk" : "light green",
